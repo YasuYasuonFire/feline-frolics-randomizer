@@ -31,12 +31,12 @@ const Index = () => {
   });
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const intervalId = setInterval(() => {
       handleRefresh();
     }, 5000);
 
-    return () => clearTimeout(timer);
-  }, [handleRefresh]);
+    return () => clearInterval(intervalId);
+  }, []); // 空の依存配列
 
   const handleMoodSelect = (mood) => {
     setSelectedMood(mood);
@@ -67,11 +67,21 @@ const Index = () => {
         )}
       </div>
 
-      <div className="flex space-x-2 mt-4">
-        <Button onClick={() => handleMoodSelect('')}>すべて</Button>
-        <Button onClick={() => handleMoodSelect('kitten')}>子猫</Button>
-        <Button onClick={() => handleMoodSelect('cute')}>かわいい</Button>
-        <Button onClick={() => handleMoodSelect('strong')}>強そう</Button>
+      <div className="flex flex-wrap justify-center gap-2 mt-4">
+        {['すべて', '子猫', 'かわいい', '強そう'].map((mood) => (
+          <Button
+            key={mood}
+            onClick={() => handleMoodSelect(mood)}
+            variant={selectedMood === mood ? "secondary" : "default"}
+            className={`transition-all duration-200 ${
+              selectedMood === mood
+                ? 'bg-pink-500 text-white scale-105'
+                : 'bg-pink-200 text-pink-800 hover:bg-pink-300'
+            }`}
+          >
+            {mood}
+          </Button>
+        ))}
       </div>
     </div>
   );
