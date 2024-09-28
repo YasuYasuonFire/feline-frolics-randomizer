@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
@@ -36,6 +36,15 @@ const Index = () => {
     trackMouse: true
   });
 
+  // 自動遷移のための useEffect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleRefresh();
+    }, 5000); // 5秒ごとに自動遷移
+
+    return () => clearTimeout(timer);
+  }, [handleRefresh]);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
       <h1 className="text-3xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
@@ -72,10 +81,6 @@ const Index = () => {
           </div>
         )}
       </div>
-
-      <Button onClick={handleRefresh} className="mt-4">
-        新しい猫画像を表示
-      </Button>
     </div>
   );
 };
