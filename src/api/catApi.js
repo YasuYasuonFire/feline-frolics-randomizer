@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-const API_KEY = 'live_YOUR_API_KEY_HERE'; // 実際のAPIキーに置き換えてください
+const API_KEY = import.meta.env.VITE_CAT_API_KEY;
 const BASE_URL = 'https://api.thecatapi.com/v1';
+const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
 
 export const getRandomCat = async (mood = '') => {
   try {
@@ -22,7 +23,7 @@ export const getRandomCat = async (mood = '') => {
         break;
     }
 
-    const response = await axios.get(`${BASE_URL}/images/search`, {
+    const response = await axios.get(`${CORS_PROXY}${BASE_URL}/images/search`, {
       headers: {
         'x-api-key': API_KEY,
       },
@@ -45,7 +46,7 @@ export const getRandomCat = async (mood = '') => {
 
 export const getCatBreeds = async () => {
   try {
-    const response = await axios.get(`${BASE_URL}/breeds`, {
+    const response = await axios.get(`${CORS_PROXY}${BASE_URL}/breeds`, {
       headers: {
         'x-api-key': API_KEY,
       },
