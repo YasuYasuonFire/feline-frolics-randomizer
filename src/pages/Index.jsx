@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
 import { useSwipeable } from 'react-swipeable';
+import { Button } from "@/components/ui/button"
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState('');
@@ -37,6 +38,11 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, [handleRefresh]);
 
+  const handleMoodSelect = (mood) => {
+    setSelectedMood(mood);
+    refetch();
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
       <h1 className="text-3xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
@@ -59,6 +65,13 @@ const Index = () => {
             <p className="text-xl text-gray-600">画像が見つかりません</p>
           </div>
         )}
+      </div>
+
+      <div className="flex space-x-2 mt-4">
+        <Button onClick={() => handleMoodSelect('')}>すべて</Button>
+        <Button onClick={() => handleMoodSelect('kitten')}>子猫</Button>
+        <Button onClick={() => handleMoodSelect('cute')}>かわいい</Button>
+        <Button onClick={() => handleMoodSelect('strong')}>強そう</Button>
       </div>
     </div>
   );
