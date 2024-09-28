@@ -14,7 +14,7 @@ const App = () => (
         <Toaster />
         <BrowserRouter>
           <Routes>
-            {navItems.map(({ to, page }) => (
+            {navItems && navItems.map(({ to, page }) => (
               <Route key={to} path={to} element={page} />
             ))}
           </Routes>
