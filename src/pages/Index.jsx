@@ -49,7 +49,7 @@ const Index = () => {
         Neko Snap
       </h1>
 
-      <div {...handlers} className="w-full max-w-md mx-auto mb-4 rounded-lg overflow-hidden shadow-lg">
+      <div {...handlers} className="w-full max-w-md mx-auto mb-4 rounded-lg overflow-hidden shadow-lg touch-pan-y">
         {isLoading ? (
           <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
             <p className="text-xl text-gray-600">読み込み中...</p>
