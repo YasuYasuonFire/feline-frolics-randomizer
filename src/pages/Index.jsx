@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
@@ -7,7 +7,6 @@ import { useSwipeable } from 'react-swipeable';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState('');
-  const [autoSwipe, setAutoSwipe] = useState(true);
 
   const { data: catData, refetch, isLoading, isError } = useQuery({
     queryKey: ['randomCat', selectedMood],
@@ -37,16 +36,6 @@ const Index = () => {
     trackMouse: true
   });
 
-  useEffect(() => {
-    let interval;
-    if (autoSwipe) {
-      interval = setInterval(() => {
-        handleRefresh();
-      }, 3000);
-    }
-    return () => clearInterval(interval);
-  }, [autoSwipe, handleRefresh]);
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
       <h1 className="text-3xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
@@ -75,9 +64,9 @@ const Index = () => {
           <div className="w-full h-64 md:h-96 bg-red-100 flex items-center justify-center">
             <p className="text-xl text-red-600">エラーが発生しました。再試行してください。</p>
           </div>
-        ) : (
-          <CatImage imageUrl={catData?.url} />
-        )}
+        ) : catData ? (
+          <CatImage imageUrl={catData.url} />
+        ) : null}
       </div>
     </div>
   );

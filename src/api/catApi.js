@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_KEY = 'live_YOUR_API_KEY_HERE'; // 実際のAPIキーに置き換えてください
+const API_KEY = 'live_YOUR_API_KEY_HERE'; // Replace with your actual API key
 const BASE_URL = 'https://api.thecatapi.com/v1';
 
 export const getRandomCat = async (mood = '') => {
@@ -9,17 +9,16 @@ export const getRandomCat = async (mood = '') => {
     
     switch(mood) {
       case 'kitten':
-        params.category_ids = 15; // 子猫のカテゴリID
+        params.category_ids = 15;
         break;
       case 'cute':
-        params.breed_ids = 'beng,ragd,sibe'; // かわいい猫の品種ID（例：ベンガル、ラグドール、シベリアン）
+        params.breed_ids = 'beng,ragd,sibe';
         break;
       case 'strong':
-        params.breed_ids = 'mcoo,sava,bsho'; // たくましい猫の品種ID（例：メインクーン、サバンナ、ブリティッシュショートヘア）
+        params.breed_ids = 'mcoo,sava,bsho';
         break;
       case 'all':
       default:
-        // パラメータなし（すべての猫）
         break;
     }
 
@@ -29,9 +28,14 @@ export const getRandomCat = async (mood = '') => {
       },
       params: params,
     });
-    return response.data[0];
+    
+    // Instead of returning the entire response data, return only the necessary information
+    return {
+      id: response.data[0].id,
+      url: response.data[0].url,
+    };
   } catch (error) {
-    console.error('猫の画像の取得に失敗しました:', error);
+    console.error('Failed to fetch cat image:', error);
     throw error;
   }
 };
@@ -45,7 +49,7 @@ export const getCatBreeds = async () => {
     });
     return response.data;
   } catch (error) {
-    console.error('猫の品種の取得に失敗しました:', error);
+    console.error('Failed to fetch cat breeds:', error);
     throw error;
   }
 };

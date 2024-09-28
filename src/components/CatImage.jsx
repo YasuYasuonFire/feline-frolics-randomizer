@@ -8,6 +8,7 @@ const CatImage = ({ imageUrl }) => {
           src={imageUrl}
           alt="Random cat"
           className="absolute top-0 left-0 w-full h-full object-cover"
+          crossOrigin="anonymous"
         />
       ) : (
         <div className="absolute top-0 left-0 w-full h-full bg-gray-200 flex items-center justify-center">
