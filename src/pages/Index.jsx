@@ -2,14 +2,14 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
-import { Button } from "@/components/ui/button"
 import { useSwipeable } from 'react-swipeable';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
 
   const { data: catData, refetch, isLoading, isError } = useQuery({
-    queryKey: ['randomCat', selectedMood],
+    queryKey: ['randomCat', selectedMood, retryCount],
     queryFn: () => getRandomCat(selectedMood),
     refetchOnWindowFocus: false,
   });
@@ -18,16 +18,9 @@ const Index = () => {
     refetch();
   }, [refetch]);
 
-  const handleMoodChange = (mood) => {
-    setSelectedMood(mood);
-  };
-
-  const moodOptions = [
-    { value: 'kitten', label: '子猫' },
-    { value: 'cute', label: 'かわいい' },
-    { value: 'strong', label: 'たくましい' },
-    { value: 'all', label: 'すべて' },
-  ];
+  const handleImageError = useCallback(() => {
+    setRetryCount((prevCount) => prevCount + 1);
+  }, []);
 
   const handlers = useSwipeable({
     onSwipedLeft: handleRefresh,
@@ -36,11 +29,10 @@ const Index = () => {
     trackMouse: true
   });
 
-  // 自動遷移のための useEffect
   useEffect(() => {
     const timer = setTimeout(() => {
       handleRefresh();
-    }, 5000); // 5秒ごとに自動遷移
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, [handleRefresh]);
@@ -50,19 +42,6 @@ const Index = () => {
       <h1 className="text-3xl md:text-5xl font-bold mb-6 text-center bg-gradient-to-r from-purple-500 to-pink-500 text-transparent bg-clip-text">
         Neko Snap
       </h1>
-      
-      <div className="flex flex-wrap justify-center gap-2 mb-4">
-        {moodOptions.map((option) => (
-          <Button
-            key={option.value}
-            onClick={() => handleMoodChange(option.value)}
-            variant={selectedMood === option.value ? "default" : "outline"}
-            className="rounded-full"
-          >
-            {option.label}
-          </Button>
-        ))}
-      </div>
 
       <div {...handlers} className="w-full max-w-md mx-auto mb-4 rounded-lg overflow-hidden shadow-lg">
         {isLoading ? (
@@ -74,7 +53,7 @@ const Index = () => {
             <p className="text-xl text-red-600">エラーが発生しました。再試行してください。</p>
           </div>
         ) : catData && catData.url ? (
-          <CatImage imageUrl={catData.url} />
+          <CatImage imageUrl={catData.url} onError={handleImageError} />
         ) : (
           <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
             <p className="text-xl text-gray-600">画像が見つかりません</p>
