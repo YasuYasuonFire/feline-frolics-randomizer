@@ -7,16 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RefreshCw } from 'lucide-react';
 
 const Index = () => {
-  const [selectedBreed, setSelectedBreed] = useState('');
-
-  const { data: breeds } = useQuery({
-    queryKey: ['catBreeds'],
-    queryFn: getCatBreeds,
-  });
+  const [selectedMood, setSelectedMood] = useState('');
 
   const { data: catData, refetch, isLoading, isError } = useQuery({
-    queryKey: ['randomCat', selectedBreed],
-    queryFn: () => getRandomCat(selectedBreed),
+    queryKey: ['randomCat', selectedMood],
+    queryFn: () => getRandomCat(selectedMood),
     refetchOnWindowFocus: false,
   });
 
@@ -24,32 +19,38 @@ const Index = () => {
     refetch();
   };
 
-  const handleBreedChange = (value) => {
-    setSelectedBreed(value);
+  const handleMoodChange = (value) => {
+    setSelectedMood(value);
   };
+
+  const moodOptions = [
+    { value: 'kitten', label: '子猫' },
+    { value: 'cute', label: 'かわいい' },
+    { value: 'strong', label: 'たくましい' },
+    { value: 'all', label: 'すべて' },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
-      <h1 className="text-4xl font-bold mb-8 text-center">Random Cat Image Generator</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">ランダム猫画像ジェネレーター</h1>
       
-      <Select onValueChange={handleBreedChange} value={selectedBreed}>
+      <Select onValueChange={handleMoodChange} value={selectedMood}>
         <SelectTrigger className="w-[280px] mb-4">
-          <SelectValue placeholder="Select a cat breed" />
+          <SelectValue placeholder="猫の雰囲気を選択" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Breeds</SelectItem>
-          {breeds?.map((breed) => (
-            <SelectItem key={breed.id} value={breed.id}>
-              {breed.name}
+          {moodOptions.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
 
       {isLoading ? (
-        <p className="text-xl text-gray-600">Loading...</p>
+        <p className="text-xl text-gray-600">読み込み中...</p>
       ) : isError ? (
-        <p className="text-xl text-red-600">Error loading cat image. Please try again.</p>
+        <p className="text-xl text-red-600">画像の読み込みに失敗しました。もう一度お試しください。</p>
       ) : (
         <CatImage imageUrl={catData?.url} />
       )}
@@ -59,7 +60,7 @@ const Index = () => {
         disabled={isLoading}
       >
         <RefreshCw className="mr-2 h-4 w-4" />
-        Get New Cat
+        新しい猫を表示
       </Button>
     </div>
   );
