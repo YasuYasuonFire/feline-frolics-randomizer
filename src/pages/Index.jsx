@@ -37,7 +37,7 @@ const Index = () => {
           <SelectValue placeholder="Select a cat breed" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Breeds</SelectItem>
+          <SelectItem value="all">All Breeds</SelectItem>
           {breeds?.map((breed) => (
             <SelectItem key={breed.id} value={breed.id}>
               {breed.name}

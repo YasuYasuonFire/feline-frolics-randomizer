@@ -10,7 +10,7 @@ export const getRandomCat = async (breedId = '') => {
         'x-api-key': API_KEY,
       },
       params: {
-        breed_ids: breedId,
+        breed_ids: breedId === 'all' ? '' : breedId,
       },
     });
     return response.data[0];
