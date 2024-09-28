@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
 import { useSwipeable } from 'react-swipeable';
 
 const Index = () => {
@@ -19,8 +19,8 @@ const Index = () => {
     refetch();
   }, [refetch]);
 
-  const handleMoodChange = (value) => {
-    setSelectedMood(value);
+  const handleMoodChange = (mood) => {
+    setSelectedMood(mood);
   };
 
   const moodOptions = [
@@ -53,18 +53,18 @@ const Index = () => {
         Neko Snap
       </h1>
       
-      <Select onValueChange={handleMoodChange} value={selectedMood}>
-        <SelectTrigger className="w-full max-w-[280px] mb-4 bg-white rounded-full shadow-md">
-          <SelectValue placeholder="猫の雰囲気を選択" />
-        </SelectTrigger>
-        <SelectContent>
-          {moodOptions.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="flex flex-wrap justify-center gap-2 mb-4">
+        {moodOptions.map((option) => (
+          <Button
+            key={option.value}
+            onClick={() => handleMoodChange(option.value)}
+            variant={selectedMood === option.value ? "default" : "outline"}
+            className="rounded-full"
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
 
       <div {...handlers} className="w-full max-w-md mx-auto mb-4 rounded-lg overflow-hidden shadow-lg">
         {isLoading ? (
@@ -79,10 +79,6 @@ const Index = () => {
           <CatImage imageUrl={catData?.url} />
         )}
       </div>
-
-      <p className="mt-4 text-sm text-gray-600 text-center">
-        {autoSwipe ? '自動スワイプ中...' : '左右にスワイプして新しい画像を表示'}
-      </p>
     </div>
   );
 };
