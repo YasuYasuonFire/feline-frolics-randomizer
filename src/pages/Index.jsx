@@ -64,9 +64,13 @@ const Index = () => {
           <div className="w-full h-64 md:h-96 bg-red-100 flex items-center justify-center">
             <p className="text-xl text-red-600">エラーが発生しました。再試行してください。</p>
           </div>
-        ) : catData ? (
+        ) : catData && catData.url ? (
           <CatImage imageUrl={catData.url} />
-        ) : null}
+        ) : (
+          <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
+            <p className="text-xl text-gray-600">画像が見つかりません</p>
+          </div>
+        )}
       </div>
     </div>
   );
