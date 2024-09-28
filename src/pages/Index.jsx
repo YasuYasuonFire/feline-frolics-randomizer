@@ -72,6 +72,10 @@ const Index = () => {
           </div>
         )}
       </div>
+
+      <Button onClick={handleRefresh} className="mt-4">
+        新しい猫画像を表示
+      </Button>
     </div>
   );
 };

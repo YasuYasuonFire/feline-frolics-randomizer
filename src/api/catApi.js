@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_KEY = 'live_YOUR_API_KEY_HERE'; // Replace with your actual API key
+const API_KEY = 'live_YOUR_API_KEY_HERE'; // 実際のAPIキーに置き換えてください
 const BASE_URL = 'https://api.thecatapi.com/v1';
 
 export const getRandomCat = async (mood = '') => {
@@ -29,11 +29,14 @@ export const getRandomCat = async (mood = '') => {
       params: params,
     });
     
-    // Instead of returning the entire response data, return only the necessary information
-    return {
-      id: response.data[0].id,
-      url: response.data[0].url,
-    };
+    if (response.data && response.data.length > 0) {
+      return {
+        id: response.data[0].id,
+        url: response.data[0].url,
+      };
+    } else {
+      throw new Error('No cat image found');
+    }
   } catch (error) {
     console.error('Failed to fetch cat image:', error);
     throw error;
