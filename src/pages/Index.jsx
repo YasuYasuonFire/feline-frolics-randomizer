@@ -4,10 +4,13 @@ import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
 import { useSwipeable } from 'react-swipeable';
 import { Button } from "@/components/ui/button"
+import FavoriteButton from '../components/FavoriteButton';
+import { toggleFavorite, getFavoriteStatus } from '../utils/supabaseUtils';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState('');
   const [retryCount, setRetryCount] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const { data: catData, refetch, isLoading, isError } = useQuery({
     queryKey: ['randomCat', selectedMood, retryCount],
@@ -36,11 +39,26 @@ const Index = () => {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, []); // 空の依存配列
+  }, []);
 
   const handleMoodSelect = (mood) => {
     setSelectedMood(mood);
     refetch();
+  };
+
+  useEffect(() => {
+    if (catData && catData.id) {
+      getFavoriteStatus(catData.id).then(setIsFavorite);
+    }
+  }, [catData]);
+
+  const handleFavoriteToggle = async () => {
+    if (catData && catData.id) {
+      const success = await toggleFavorite(catData.id, isFavorite);
+      if (success) {
+        setIsFavorite(!isFavorite);
+      }
+    }
   };
 
   return (
@@ -59,7 +77,12 @@ const Index = () => {
             <p className="text-xl text-red-600">エラーが発生しました。再試行してください。</p>
           </div>
         ) : catData && catData.url ? (
-          <CatImage imageUrl={catData.url} onError={handleImageError} />
+          <div className="relative">
+            <CatImage imageUrl={catData.url} onError={handleImageError} />
+            <div className="absolute top-2 right-2">
+              <FavoriteButton isFavorite={isFavorite} onClick={handleFavoriteToggle} />
+            </div>
+          </div>
         ) : (
           <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
             <p className="text-xl text-gray-600">画像が見つかりません</p>
