@@ -4,7 +4,6 @@ import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
 import { useSwipeable } from 'react-swipeable';
 import { Button } from "@/components/ui/button"
-import { supabase } from '../lib/supabase';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState('');
@@ -37,31 +36,12 @@ const Index = () => {
     }, 5000);
 
     return () => clearInterval(intervalId);
-  }, []);
+  }, []); // 空の依存配列
 
   const handleMoodSelect = (mood) => {
     setSelectedMood(mood);
     refetch();
   };
-
-  const saveImageUrl = async (url) => {
-    try {
-      const { data, error } = await supabase
-        .from('cat_images')
-        .insert([{ url: url }]);
-      
-      if (error) throw error;
-      console.log('Image URL saved successfully');
-    } catch (error) {
-      console.error('Error saving image URL:', error.message);
-    }
-  };
-
-  useEffect(() => {
-    if (catData && catData.url) {
-      saveImageUrl(catData.url);
-    }
-  }, [catData]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
