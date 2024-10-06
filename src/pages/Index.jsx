@@ -11,6 +11,7 @@ const Index = () => {
   const [selectedMood, setSelectedMood] = useState('');
   const [retryCount, setRetryCount] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [catDataList, setCatDataList] = useState([]); // 猫の画像リストを追加
 
   const { data: catData, refetch, isLoading, isError } = useQuery({
     queryKey: ['randomCat', selectedMood, retryCount],
@@ -22,6 +23,13 @@ const Index = () => {
     refetch();
   }, [refetch]);
 
+  // 猫の画像を2つ取得するための新しい関数
+  const fetchCats = useCallback(async () => {
+    const cats = await Promise.all([getRandomCat(selectedMood), getRandomCat(selectedMood)]);
+    console.log('Fetched cats:', cats); // デバッグ用
+    setCatDataList(cats);
+  }, [selectedMood]);
+
   const handleImageError = useCallback(() => {
     setRetryCount((prevCount) => prevCount + 1);
   }, []);
@@ -32,6 +40,10 @@ const Index = () => {
     preventDefaultTouchmoveEvent: true,
     trackMouse: true
   });
+
+  useEffect(() => {
+    fetchCats(); // 初回データ取得
+  }, [selectedMood, retryCount]); // selectedMoodとretryCountが変わったときに再取得
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -76,12 +88,25 @@ const Index = () => {
           <div className="w-full h-64 md:h-96 bg-red-100 flex items-center justify-center">
             <p className="text-xl text-red-600">エラーが発生しました。再試行してください。</p>
           </div>
-        ) : catData && catData.url ? (
-          <div className="relative">
-            <CatImage imageUrl={catData.url} onError={handleImageError} />
-            <div className="absolute top-2 right-2">
-              <FavoriteButton isFavorite={isFavorite} onClick={handleFavoriteToggle} />
-            </div>
+        ) : catDataList.length > 0 ? ( // 画像リストがある場合
+          <div className="flex justify-between">
+            {catDataList.map((catData, index) => {
+              console.log('Cat data:', catData); // デバッグ用
+              return (
+                <div key={index} className="relative w-1/2 p-2">
+                  {catData && catData.url ? ( // catDataとurlの存在を確認
+                    <CatImage imageUrl={catData.url} onError={handleImageError} />
+                  ) : (
+                    <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
+                      <p className="text-xl text-gray-600">画像が見つかりません</p>
+                    </div>
+                  )}
+                  <div className="absolute top-2 right-2">
+                    <FavoriteButton isFavorite={isFavorite} onClick={() => handleFavoriteToggle(catData.id)} />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">

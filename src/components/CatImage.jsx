@@ -1,25 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 const CatImage = ({ imageUrl, onError }) => {
-  const [currentImageUrl, setCurrentImageUrl] = useState(imageUrl);
-
-  useEffect(() => {
-    setCurrentImageUrl(imageUrl);
-  }, [imageUrl]);
-
-  const handleImageError = () => {
-    onError();
-  };
+  console.log('CatImage rendering with URL:', imageUrl); // デバッグ用
 
   return (
-    <div className="w-full h-0 pb-[100%] relative overflow-hidden rounded-lg shadow-lg">
-      <img
-        src={currentImageUrl}
-        alt="ランダムな猫の画像"
-        className="absolute top-0 left-0 w-full h-full object-cover"
-        onError={handleImageError}
-      />
-    </div>
+    <img
+      src={imageUrl}
+      alt="猫の画像"
+      onError={onError}
+      className="w-full h-auto object-cover"
+      style={{ maxHeight: '400px' }}
+    />
   );
 };
 
