@@ -15,23 +15,41 @@ const Index = () => {
 
   const fetchCats = useCallback(async () => {
     console.log('Fetching cats with preferred breeds:', preferredBreeds);
-    const cats = await Promise.all([getRandomCat(preferredBreeds), getRandomCat(preferredBreeds)]);
-    console.log('Fetched cats:', cats);
-    setKey(prevKey => prevKey + 1);
-    setCatDataList(cats);
+    let firstCat, secondCat;
+    
+    try {
+      // 最初の猫を取得
+      firstCat = await getRandomCat(preferredBreeds);
+      
+      // 2番目の猫を取得（最初の猫と異なるものを確保）
+      do {
+        secondCat = await getRandomCat(preferredBreeds);
+      } while (secondCat.id === firstCat.id);
+      
+      console.log('Fetched cats:', [firstCat, secondCat]);
+      setKey(prevKey => prevKey + 1);
+      setCatDataList([firstCat, secondCat]);
+    } catch (error) {
+      console.error('Error fetching cats:', error);
+      // エラーが発生した場合でも、タイマーをリセットして再試行
+      resetTimer();
+    }
   }, [preferredBreeds]);
 
   const resetTimer = useCallback(() => {
+    console.log('Resetting timer');
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
     timerRef.current = setTimeout(() => {
+      console.log('Timer fired, fetching new cats');
       setPreferredBreeds(''); // preferredBreedsをリセット
       fetchCats();
     }, 5000); // 5秒後に遷移
   }, [fetchCats]);
 
   const handleImageError = useCallback(() => {
+    console.log('Image error occurred, fetching new cats');
     fetchCats();
   }, [fetchCats]);
 
@@ -43,9 +61,11 @@ const Index = () => {
   });
 
   useEffect(() => {
+    console.log('Component mounted or dependencies changed, fetching cats and resetting timer');
     fetchCats();
     resetTimer();
     return () => {
+      console.log('Component unmounting, clearing timer');
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
