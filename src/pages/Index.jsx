@@ -12,7 +12,6 @@ const Index = () => {
   const [key, setKey] = useState(0);
   const timerRef = useRef(null);
   const [preferredBreeds, setPreferredBreeds] = useState('');
-  const [transitionCount, setTransitionCount] = useState(0);
 
   const fetchCats = useCallback(async () => {
     console.log('Fetching cats with preferred breeds:', preferredBreeds);
@@ -20,20 +19,6 @@ const Index = () => {
     console.log('Fetched cats:', cats);
     setKey(prevKey => prevKey + 1);
     setCatDataList(cats);
-    
-    // 遷移回数をインクリメント
-    setTransitionCount(prevCount => {
-      const newCount = prevCount + 1;
-      console.log('Transition count:', newCount);
-      
-      // 3回以上遷移した場合、preferredBreedsをクリア
-      if (newCount >= 3) {
-        console.log('Clearing preferred breeds');
-        setPreferredBreeds('');
-        return 0; // カウントをリセット
-      }
-      return newCount;
-    });
   }, [preferredBreeds]);
 
   const resetTimer = useCallback(() => {
@@ -41,8 +26,9 @@ const Index = () => {
       clearTimeout(timerRef.current);
     }
     timerRef.current = setTimeout(() => {
+      setPreferredBreeds(''); // preferredBreedsをリセット
       fetchCats();
-    }, 10000);
+    }, 5000); // 5秒後に遷移
   }, [fetchCats]);
 
   const handleImageError = useCallback(() => {
@@ -89,7 +75,6 @@ const Index = () => {
             console.log('Updated preferred breeds:', updatedBreeds);
             return updatedBreeds;
           });
-          setTransitionCount(0); // お気に入りを選択したらカウントをリセット
         } else {
           console.log('No breeds found for this image');
         }
