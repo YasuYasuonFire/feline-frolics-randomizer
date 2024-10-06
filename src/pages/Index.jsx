@@ -1,27 +1,40 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getRandomCat } from '../api/catApi';
+import { getRandomCat, getCatBreedsByImageId } from '../api/catApi';
 import CatImage from '../components/CatImage';
 import { useSwipeable } from 'react-swipeable';
-import { Button } from "@/components/ui/button"
 import FavoriteButton from '../components/FavoriteButton';
 import { toggleFavorite } from '../utils/supabaseUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Index = () => {
-  const [selectedMood, setSelectedMood] = useState('');
-  const [retryCount, setRetryCount] = useState(0);
   const [catDataList, setCatDataList] = useState([]);
   const [favorites, setFavorites] = useState({});
   const [key, setKey] = useState(0);
   const timerRef = useRef(null);
+  const [preferredBreeds, setPreferredBreeds] = useState('');
+  const [transitionCount, setTransitionCount] = useState(0);
 
   const fetchCats = useCallback(async () => {
-    const cats = await Promise.all([getRandomCat(selectedMood), getRandomCat(selectedMood)]);
+    console.log('Fetching cats with preferred breeds:', preferredBreeds);
+    const cats = await Promise.all([getRandomCat(preferredBreeds), getRandomCat(preferredBreeds)]);
     console.log('Fetched cats:', cats);
     setKey(prevKey => prevKey + 1);
     setCatDataList(cats);
-  }, [selectedMood]);
+    
+    // 遷移回数をインクリメント
+    setTransitionCount(prevCount => {
+      const newCount = prevCount + 1;
+      console.log('Transition count:', newCount);
+      
+      // 3回以上遷移した場合、preferredBreedsをクリア
+      if (newCount >= 3) {
+        console.log('Clearing preferred breeds');
+        setPreferredBreeds('');
+        return 0; // カウントをリセット
+      }
+      return newCount;
+    });
+  }, [preferredBreeds]);
 
   const resetTimer = useCallback(() => {
     if (timerRef.current) {
@@ -29,12 +42,12 @@ const Index = () => {
     }
     timerRef.current = setTimeout(() => {
       fetchCats();
-    }, 10000); // 10秒ごとに画像を更新
+    }, 10000);
   }, [fetchCats]);
 
   const handleImageError = useCallback(() => {
-    setRetryCount((prevCount) => prevCount + 1);
-  }, []);
+    fetchCats();
+  }, [fetchCats]);
 
   const handlers = useSwipeable({
     onSwipedLeft: fetchCats,
@@ -51,19 +64,44 @@ const Index = () => {
         clearTimeout(timerRef.current);
       }
     };
-  }, [selectedMood, retryCount, fetchCats, resetTimer]);
+  }, [fetchCats, resetTimer]);
 
-  const handleMoodSelect = (mood) => {
-    setSelectedMood(mood);
-  };
+  const handleFavoriteToggle = async (catData) => {
+    console.log('handleFavoriteToggle called with:', catData);
 
-  const handleFavoriteToggle = async (catId) => {
     const newFavorites = { ...favorites };
-    newFavorites[catId] = !newFavorites[catId];
+    newFavorites[catData.id] = !newFavorites[catData.id];
     setFavorites(newFavorites);
-    await toggleFavorite(catId, newFavorites[catId]);
+    await toggleFavorite(catData.id, newFavorites[catData.id]);
+    
+    console.log('Is favorite now:', newFavorites[catData.id]);
+
+    if (newFavorites[catData.id]) {
+      console.log('Attempting to fetch breeds for image:', catData.id);
+      try {
+        const breeds = await getCatBreedsByImageId(catData.id);
+        console.log('Fetched breeds:', breeds);
+        if (breeds && breeds.length > 0) {
+          setPreferredBreeds(prevBreeds => {
+            const newBreeds = new Set(prevBreeds ? prevBreeds.split(',') : []);
+            breeds.forEach(breed => newBreeds.add(breed.id));
+            const updatedBreeds = Array.from(newBreeds).join(',');
+            console.log('Updated preferred breeds:', updatedBreeds);
+            return updatedBreeds;
+          });
+          setTransitionCount(0); // お気に入りを選択したらカウントをリセット
+        } else {
+          console.log('No breeds found for this image');
+        }
+      } catch (error) {
+        console.error('Error fetching breeds for image:', error);
+      }
+    } else {
+      console.log('Image unfavorited, not fetching breeds');
+    }
+    
     fetchCats();
-    resetTimer(); // お気に入りボタンを押した後にタイマーをリセット
+    resetTimer();
   };
 
   return (
@@ -99,7 +137,7 @@ const Index = () => {
                   <div className="absolute top-2 right-2">
                     <FavoriteButton
                       isFavorite={favorites[catData.id] || false}
-                      onClick={() => handleFavoriteToggle(catData.id)}
+                      onClick={() => handleFavoriteToggle(catData)}
                     />
                   </div>
                 </div>
@@ -109,21 +147,9 @@ const Index = () => {
         )}
       </div>
 
-      <div className="flex flex-wrap justify-center gap-2 mt-4">
-        {['すべて', '子猫', 'かわいい', '強そう'].map((mood) => (
-          <Button
-            key={mood}
-            onClick={() => handleMoodSelect(mood)}
-            variant={selectedMood === mood ? "secondary" : "default"}
-            className={`transition-all duration-200 ${
-              selectedMood === mood
-                ? 'bg-pink-500 text-white scale-105'
-                : 'bg-pink-200 text-pink-800 hover:bg-pink-300'
-            }`}
-          >
-            {mood}
-          </Button>
-        ))}
+      <div className="text-center mb-4">
+        <p className="text-lg font-semibold text-gray-700">好みの猫を選ぼう！</p>
+        <p className="text-sm text-gray-600">あなた好みのニャンコが登場</p>
       </div>
     </div>
   );
