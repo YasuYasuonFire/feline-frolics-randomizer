@@ -1,76 +1,69 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getRandomCat } from '../api/catApi';
 import CatImage from '../components/CatImage';
 import { useSwipeable } from 'react-swipeable';
 import { Button } from "@/components/ui/button"
 import FavoriteButton from '../components/FavoriteButton';
-import { toggleFavorite, getFavoriteStatus } from '../utils/supabaseUtils';
+import { toggleFavorite } from '../utils/supabaseUtils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Index = () => {
   const [selectedMood, setSelectedMood] = useState('');
   const [retryCount, setRetryCount] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [catDataList, setCatDataList] = useState([]); // 猫の画像リストを追加
+  const [catDataList, setCatDataList] = useState([]);
+  const [favorites, setFavorites] = useState({});
+  const [key, setKey] = useState(0);
+  const timerRef = useRef(null);
 
-  const { data: catData, refetch, isLoading, isError } = useQuery({
-    queryKey: ['randomCat', selectedMood, retryCount],
-    queryFn: () => getRandomCat(selectedMood),
-    refetchOnWindowFocus: false,
-  });
-
-  const handleRefresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
-
-  // 猫の画像を2つ取得するための新しい関数
   const fetchCats = useCallback(async () => {
     const cats = await Promise.all([getRandomCat(selectedMood), getRandomCat(selectedMood)]);
-    console.log('Fetched cats:', cats); // デバッグ用
+    console.log('Fetched cats:', cats);
+    setKey(prevKey => prevKey + 1);
     setCatDataList(cats);
   }, [selectedMood]);
+
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    timerRef.current = setTimeout(() => {
+      fetchCats();
+    }, 10000); // 10秒ごとに画像を更新
+  }, [fetchCats]);
 
   const handleImageError = useCallback(() => {
     setRetryCount((prevCount) => prevCount + 1);
   }, []);
 
   const handlers = useSwipeable({
-    onSwipedLeft: handleRefresh,
-    onSwipedRight: handleRefresh,
+    onSwipedLeft: fetchCats,
+    onSwipedRight: fetchCats,
     preventDefaultTouchmoveEvent: true,
     trackMouse: true
   });
 
   useEffect(() => {
-    fetchCats(); // 初回データ取得
-  }, [selectedMood, retryCount]); // selectedMoodとretryCountが変わったときに再取得
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      handleRefresh();
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, []);
+    fetchCats();
+    resetTimer();
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [selectedMood, retryCount, fetchCats, resetTimer]);
 
   const handleMoodSelect = (mood) => {
     setSelectedMood(mood);
-    refetch();
   };
 
-  useEffect(() => {
-    if (catData && catData.id) {
-      getFavoriteStatus(catData.id).then(setIsFavorite);
-    }
-  }, [catData]);
-
-  const handleFavoriteToggle = async () => {
-    if (catData && catData.id) {
-      const success = await toggleFavorite(catData.id, isFavorite);
-      if (success) {
-        setIsFavorite(!isFavorite);
-      }
-    }
+  const handleFavoriteToggle = async (catId) => {
+    const newFavorites = { ...favorites };
+    newFavorites[catId] = !newFavorites[catId];
+    setFavorites(newFavorites);
+    await toggleFavorite(catId, newFavorites[catId]);
+    fetchCats();
+    resetTimer(); // お気に入りボタンを押した後にタイマーをリセット
   };
 
   return (
@@ -80,21 +73,23 @@ const Index = () => {
       </h1>
 
       <div {...handlers} className="w-full max-w-md mx-auto mb-4 rounded-lg overflow-hidden shadow-lg touch-pan-y">
-        {isLoading ? (
+        {catDataList.length === 0 ? (
           <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
             <p className="text-xl text-gray-600">読み込み中...</p>
           </div>
-        ) : isError ? (
-          <div className="w-full h-64 md:h-96 bg-red-100 flex items-center justify-center">
-            <p className="text-xl text-red-600">エラーが発生しました。再試行してください。</p>
-          </div>
-        ) : catDataList.length > 0 ? ( // 画像リストがある場合
-          <div className="flex justify-between">
-            {catDataList.map((catData, index) => {
-              console.log('Cat data:', catData); // デバッグ用
-              return (
+        ) : (
+          <AnimatePresence>
+            <motion.div
+              key={key}
+              className="flex justify-between"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              {catDataList.map((catData, index) => (
                 <div key={index} className="relative w-1/2 p-2">
-                  {catData && catData.url ? ( // catDataとurlの存在を確認
+                  {catData && catData.url ? (
                     <CatImage imageUrl={catData.url} onError={handleImageError} />
                   ) : (
                     <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
@@ -102,16 +97,15 @@ const Index = () => {
                     </div>
                   )}
                   <div className="absolute top-2 right-2">
-                    <FavoriteButton isFavorite={isFavorite} onClick={() => handleFavoriteToggle(catData.id)} />
+                    <FavoriteButton
+                      isFavorite={favorites[catData.id] || false}
+                      onClick={() => handleFavoriteToggle(catData.id)}
+                    />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="w-full h-64 md:h-96 bg-gray-200 flex items-center justify-center">
-            <p className="text-xl text-gray-600">画像が見つかりません</p>
-          </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
         )}
       </div>
 
